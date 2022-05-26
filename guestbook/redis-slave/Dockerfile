@@ -16,4 +16,6 @@ FROM redis:3.2.9
 
 COPY run.sh /
 
+USER 5000:5000
+
 CMD /run.sh

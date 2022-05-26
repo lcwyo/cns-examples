@@ -26,5 +26,8 @@ COPY --from=0 /app/main .
 COPY ./public/index.html public/index.html
 COPY ./public/script.js public/script.js
 COPY ./public/style.css public/style.css
+
+USER 5000:5000
+
 CMD ["/app/main"]
 EXPOSE 3000
