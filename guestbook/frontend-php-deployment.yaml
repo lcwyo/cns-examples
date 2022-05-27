@@ -1,27 +1,22 @@
 apiVersion: apps/v1 #  for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
 kind: Deployment
 metadata:
-  name: redis-master
+  name: frontend-php
 spec:
   selector:
     matchLabels:
-      app: redis
-      role: master
-      tier: backend
-  replicas: 1
+      app: guestbook-php
+      tier: frontend
+  replicas: 2
   template:
     metadata:
       labels:
-        app: redis
-        role: master
-        tier: backend
+        app: guestbook-php
+        tier: frontend
     spec:
       containers:
-      - name: master
-        image: docker.io/bitnami/redis:latest  # or just image: redis
-        env:
-          - name: ALLOW_EMPTY_PASSWORD
-            value: "yes"
+      - name: php-redis
+        image: docker.io/lcwyo/gb-frontend-php:v6
         resources:
           limits:
             cpu: 100m
@@ -30,4 +25,4 @@ spec:
             cpu: 100m
             memory: 100Mi
         ports:
-        - containerPort: 6379
+        - containerPort: 9000

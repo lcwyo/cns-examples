@@ -18,8 +18,11 @@ spec:
     spec:
       containers:
       - name: replica
-        image: gcr.io/google_samples/gb-redisslave:v1
+        image: docker.io/lcwyo/redis-replica:v3
         resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
           requests:
             cpu: 100m
             memory: 100Mi
