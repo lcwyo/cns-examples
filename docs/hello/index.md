@@ -11,6 +11,6 @@ permalink: /docs/hello
 Coming soon
 {: .label .label-yellow }
 
-This example shows how to the portal UI to create a deployment of a simple application
+This example shows how to use the cNS portal UI to create a deployment of a simple application using a tailored helm chart.
 
 {: .no_toc }
