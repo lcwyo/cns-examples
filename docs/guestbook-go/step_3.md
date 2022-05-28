@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Step Three
+title: Create the Redis replica deployment
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
-### Step Three: Create the Redis replica pods <a id="step-three"></a>
+### Step Three: Create the Redis replica deployment
 
 The Redis master we created earlier is a single pod (REPLICAS = 1), while the Redis read replicas we are creating here are 'replicated' pods. In Kubernetes, a replication controller is responsible for managing the multiple instances of a replicated pod.
 

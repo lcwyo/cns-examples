@@ -1,16 +1,17 @@
 ---
 layout: default
-title: Step Eight
+title: View the guestbook
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
-### Step eight: View the guestbook <a id="step-eight"></a>
+### Step eight: View the guestbook 
 
 You can now play with the guestbook that you just created by opening it in a browser (it might take a few moments for the guestbook to come up).
 
- * **Local Host:**
+ * **Port-forwarding:**
+    __find pod, port-foward and test__ 
     If you are running Kubernetes locally, to view the guestbook, navigate to `http://localhost:3000` in your browser.
 
  * **Remote Host:**

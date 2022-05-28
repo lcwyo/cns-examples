@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Step Zero
+title: Prerequisites
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
-### Step Zero: Prerequisites <a id="step-zero"></a>
+### Step Zero: Prerequisites
 
 This example assumes that you have a working cluster. See the [Getting Started Guides]() for details about creating a cluster.
 

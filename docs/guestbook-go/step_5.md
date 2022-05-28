@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Step Five
+title: Create the guestbook deployment
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
-### Step Five: Create the guestbook pods <a id="step-five"></a>
+### Step Five: Create the guestbook deployment
 
 This is a simple Go `net/http` ([negroni](https://github.com/codegangsta/negroni) based) server that is configured to talk to either the replica or master services depending on whether the request is a read or a write. The pods we are creating expose a simple JSON interface and serves a jQuery-Ajax based UI. Like the Redis replica pods, these pods are also managed by a deployment controller.
 

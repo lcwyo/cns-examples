@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Step Six
+title: Create the guestbook service
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
-### Step Six: Create the guestbook service <a id="step-six"></a>
+### Step Six: Create the guestbook service
 
 Just like the others, we create a service to group the guestbook pods but this time, to make the guestbook front end externally visible, we specify `"type": "LoadBalancer"`.
 

@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Step Four
+title: Create the Redis replica service
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
-### Step Four: Create the Redis replica service <a id="step-four"></a>
+### Step Four: Create the Redis replica service
 
 Just like the master, we want to have a service to proxy connections to the read replicas. In this case, in addition to discovery, the Redis replica service provides transparent load balancing to clients.
 

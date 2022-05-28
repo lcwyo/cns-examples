@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Step Seven
+title: Create the guestbook ingress
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
-### Step seven: create the guestbook ingress <a id="step-seven"></a>
+### Step seven: Create the guestbook ingress
 
 In order to make the guesstbook front end externally visiable, we create an ingress using the shared ingress controller.
 

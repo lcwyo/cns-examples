@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Step Two
+title: Create the Redis master service
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
-### Step Two: Create the Redis master service <a id="step-two"></a>
+### Step Two: Create the Redis master service
 
 A Kubernetes [service](https://kubernetes.io/docs/concepts/services-networking/service/) is a named load balancer that proxies traffic to one or more pods. The services in a Kubernetes cluster are discoverable inside other pods via environment variables or DNS.
 

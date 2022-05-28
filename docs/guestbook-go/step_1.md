@@ -1,13 +1,13 @@
 ---
 layout: default
-title: Step One
+title: Create the Redis master deployment
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
 
-### Step One: Create the Redis master pod<a id="step-one"></a>
+### Step One: Create the Redis master deployment
 
 Use the `examples/guestbook-go/redis-master-deployment.yaml` file to create a [deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) and Redis master [pod](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). The pod runs a Redis key-value server in a container.
 

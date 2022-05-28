@@ -1,13 +1,13 @@
 ---
 layout: default
-title: Step Nine
+title: Cleanup
 parent: Guestbook GO
 nav_order: 2
 ---
 
 
 
-### Step nine: Cleanup <a id="step-nine"></a>
+### Step nine: Cleanup
 
 After you're done playing with the guestbook, you can cleanup by deleting the guestbook service and removing the associated resources that were created, including load balancers, forwarding rules, target pools, and Kubernetes replication controllers and services.
 
