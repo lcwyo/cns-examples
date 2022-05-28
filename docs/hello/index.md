@@ -8,7 +8,9 @@ permalink: /docs/hello
 
 
 ## Hello Example
+Coming soon
+{: .label .label-yellow }
 
-This example shows how to build a simple multi-tier web application using cNS. The application consists of a web front end, Redis master for storage, and replicated set of Redis replicas, all for which we will create Kubernetes deployments, pods, services, and ingress.
+This example shows how to the portal UI to create a deployment of a simple application
 
 {: .no_toc }
