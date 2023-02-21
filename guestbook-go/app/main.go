@@ -1,60 +1,88 @@
-/*
-Copyright 2014 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
-	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
-	"github.com/xyproto/simpleredis"
+	"github.com/redis/go-redis/v9"
+	"github.com/urfave/negroni"
 )
 
 var (
-	masterPool *simpleredis.ConnectionPool
-	replicaPool  *simpleredis.ConnectionPool
+	rdb *redis.Client
 )
 
-func ListRangeHandler(rw http.ResponseWriter, req *http.Request) {
-	key := mux.Vars(req)["key"]
-	list := simpleredis.NewList(replicaPool, key)
-	members := HandleError(list.GetAll()).([]string)
-	membersJSON := HandleError(json.MarshalIndent(members, "", "  ")).([]byte)
-	rw.Write(membersJSON)
+func ShowIndex(w http.ResponseWriter, r *http.Request) {
+	//w.Header().Set("Content-Type", "application/text")
+	//w.Header().Set("X-Content-Type-Options", "nosniff")
+	http.ServeFile(w, r, "public/index.html")
 }
 
-func ListPushHandler(rw http.ResponseWriter, req *http.Request) {
-	key := mux.Vars(req)["key"]
-	value := mux.Vars(req)["value"]
-	list := simpleredis.NewList(masterPool, key)
-	HandleError(nil, list.Add(value))
-	ListRangeHandler(rw, req)
+func ListRangeHandler(w http.ResponseWriter, r *http.Request) {
+	key := mux.Vars(r)["key"]
+	list := rdb.LRange(context.Background(), key, 0, -1)
+
+	var members []string
+	err := list.ScanSlice(&members)
+	if err != nil {
+		HandleError(nil, err)
+	}
+
+	membersJSON, err := json.MarshalIndent(members, "", "  ")
+	if err != nil {
+		HandleError(nil, err)
+	}
+
+	w.Write(membersJSON)
+}
+func ListAllHandler(w http.ResponseWriter, r *http.Request) {
+	iter := rdb.Scan(context.Background(), 0, "prefix:*", 0).Iterator()
+	var keys []string
+	for iter.Next(context.Background()) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		HandleError(w, err)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(strings.Join(keys, "\n")))
+	}
 }
 
-func InfoHandler(rw http.ResponseWriter, req *http.Request) {
-	info := HandleError(masterPool.Get(0).Do("INFO")).([]byte)
-	rw.Write(info)
+func ListPushHandler(w http.ResponseWriter, r *http.Request) {
+	key := mux.Vars(r)["key"]
+	value := mux.Vars(r)["value"]
+	list := rdb.RPush(context.Background(), key, value)
+
+	err := list.Err()
+	if err != nil {
+		HandleError(w, err)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		ListRangeHandler(w, r)
+	}
 }
 
-func EnvHandler(rw http.ResponseWriter, req *http.Request) {
+func InfoHandler(w http.ResponseWriter, r *http.Request) {
+	info, err := rdb.Info(context.Background()).Result()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	//w.Header().Set("Content-Type", "application/html")
+	w.Write([]byte(info))
+}
+
+func EnvHandler(w http.ResponseWriter, r *http.Request) {
 	environment := make(map[string]string)
+
 	for _, item := range os.Environ() {
 		splits := strings.Split(item, "=")
 		key := splits[0]
@@ -62,30 +90,62 @@ func EnvHandler(rw http.ResponseWriter, req *http.Request) {
 		environment[key] = val
 	}
 
-	envJSON := HandleError(json.MarshalIndent(environment, "", "  ")).([]byte)
-	rw.Write(envJSON)
+	envJSON, err := json.MarshalIndent(environment, "", "  ")
+	if err != nil {
+		HandleError(nil, err)
+	}
+
+	w.Write(envJSON)
 }
 
 func HandleError(result interface{}, err error) (r interface{}) {
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return nil
 	}
 	return result
 }
 
 func main() {
-	masterPool = simpleredis.NewConnectionPoolHost("redis-master:6379")
-	defer masterPool.Close()
-	replicaPool = simpleredis.NewConnectionPoolHost("redis-replica:6379")
-	defer replicaPool.Close()
+	ctx := context.Background()
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
 
-	r := mux.NewRouter()
-	r.Path("/lrange/{key}").Methods("GET").HandlerFunc(ListRangeHandler)
-	r.Path("/rpush/{key}/{value}").Methods("GET").HandlerFunc(ListPushHandler)
-	r.Path("/info").Methods("GET").HandlerFunc(InfoHandler)
-	r.Path("/env").Methods("GET").HandlerFunc(EnvHandler)
+	iter := rdb.Scan(ctx, 0, "prefix:*", 0).Iterator()
+	for iter.Next(ctx) {
+		fmt.Println("keys", iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		log.Println(err)
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/", ShowIndex)
+	router.HandleFunc("/lrange/{key}", func(w http.ResponseWriter, r *http.Request) {
+		ListRangeHandler(w, r)
+	}).Methods("GET")
+	router.HandleFunc("/lrange", ListAllHandler).Methods("GET")
+	router.HandleFunc("/rpush/{key}/{value}", func(w http.ResponseWriter, r *http.Request) {
+		ListPushHandler(w, r)
+	}).Methods("POST")
+	router.HandleFunc("/info", func(w http.ResponseWriter, r *http.Request) {
+		InfoHandler(w, r)
+	}).Methods("GET")
+	router.HandleFunc("/env", EnvHandler)
 
 	n := negroni.Classic()
-	n.UseHandler(r)
-	n.Run(":3000")
+	n.Use(negroni.NewLogger())
+	n.UseHandler(router)
+
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      n,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	log.Fatal(srv.ListenAndServe())
 }

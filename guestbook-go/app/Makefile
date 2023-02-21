@@ -16,7 +16,7 @@
 
 # Usage:
 #   [VERSION=v3] [REGISTRY="staging-k8s.gcr.io"] make build
-VERSION?=v3
+VERSION?=v4
 REGISTRY?=docker.io/lcwyo
 
 release: clean build push clean

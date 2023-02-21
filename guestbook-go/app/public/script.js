@@ -15,13 +15,25 @@ $(document).ready(function() {
 
   var handleSubmission = function(e) {
     e.preventDefault();
-    var entryValue = entryContentElement.val()
+    var entryValue = entryContentElement.val();
     if (entryValue.length > 0) {
       entriesElement.append("<p>...</p>");
-      $.getJSON("rpush/guestbook/" + entryValue, appendGuestbookEntries);
+      var data = { "value": entryValue };
+      $.ajax({
+        url: "rpush/guestbook/" + entryValue,
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: function(data) {
+          appendGuestbookEntries(data);
+        }
+      });
+      entryContentElement.val(""); // Clear the input field
     }
     return false;
   }
+  
+  
 
   // colors = purple, blue, red, green, yellow
   var colors = ["#549", "#18d", "#d31", "#2a4", "#db1"];
@@ -40,7 +52,7 @@ $(document).ready(function() {
   (function fetchGuestbook() {
     $.getJSON("lrange/guestbook").done(appendGuestbookEntries).always(
       function() {
-        setTimeout(fetchGuestbook, 1000);
+        setTimeout(fetchGuestbook, 1000 );
       });
   })();
 });

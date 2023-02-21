@@ -12,13 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.10.0
-RUN go get github.com/codegangsta/negroni \
-           github.com/gorilla/mux \
-           github.com/xyproto/simpleredis
+FROM golang:1.19.6-alpine
+#RUN go install github.com/urfave/negroni@latest \
+#           github.com/gorilla/mux@latest \
+#           github.com/redis/go-redis/v9@latest
+
 WORKDIR /app
+COPY go.mod go.sum main.go ./
+RUN go mod download && go mod verify
+
 ADD ./main.go .
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+#RUN go build -v -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o main .
 
 FROM scratch
 WORKDIR /app
