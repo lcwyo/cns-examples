@@ -63,6 +63,11 @@ func main() {
 
 	gracefulShutdown(srv)
 }
+
+//func handleError(w http.ResponseWriter, err error) {
+//	HandleError(w, err, "unspecified context", http.StatusInternalServerError)
+//}
+
 func HandleError(w http.ResponseWriter, err error, context string, statusCode int) bool {
 	if err != nil {
 		errorMsg := fmt.Sprintf("Error in context '%s': %v", context, err)
@@ -97,8 +102,7 @@ func ShowIndex(w http.ResponseWriter, r *http.Request) {
 func ListRangeHandler(w http.ResponseWriter, r *http.Request) {
 	key := mux.Vars(r)["key"]
 	list, err := rdb.LRange(context.Background(), key, 0, -1).Result()
-	if err != nil {
-		handleError(w, err)
+	if HandleError(w, err, "ListRangeHandler", http.StatusInternalServerError) {
 		return
 	}
 
@@ -106,13 +110,10 @@ func ListRangeHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(list); err != nil {
-		handleError(w, err)
+		HandleError(w, err, "ListRangeHandler JSON encoding", http.StatusInternalServerError)
 	}
 }
 
-func handleError(w http.ResponseWriter, err error) {
-	panic("unimplemented")
-}
 func ListAllHandler(w http.ResponseWriter, r *http.Request) {
 	iter := rdb.Scan(context.Background(), 0, "prefix:*", 0).Iterator()
 	var keys []string
@@ -124,7 +125,7 @@ func ListAllHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := iter.Err(); err != nil {
-		handleError(w, err)
+		HandleError(w, err, "ListAllHandler ", http.StatusInternalServerError)
 		return
 	}
 
@@ -138,7 +139,7 @@ func ListPushHandler(w http.ResponseWriter, r *http.Request) {
 	value := mux.Vars(r)["value"]
 
 	if err := rdb.RPush(context.Background(), key, value).Err(); err != nil {
-		handleError(w, err)
+		HandleError(w, err, "ListPushHandler", http.StatusInternalServerError)
 		return
 	}
 
@@ -148,7 +149,7 @@ func ListPushHandler(w http.ResponseWriter, r *http.Request) {
 func InfoHandler(w http.ResponseWriter, r *http.Request) {
 	info, err := rdb.Info(context.Background()).Result()
 	if err != nil {
-		handleError(w, err)
+		HandleError(w, err, "InfoHandler", http.StatusInternalServerError)
 		return
 	}
 
@@ -170,6 +171,6 @@ func EnvHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(environment); err != nil {
-		handleError(w, err)
+		HandleError(w, err, "EnvHanlder", http.StatusInternalServerError)
 	}
 }
