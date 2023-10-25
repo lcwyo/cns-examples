@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -17,14 +18,47 @@ import (
 	"github.com/urfave/negroni"
 )
 
-var rdb *redis.Client
-
-const (
-	redisAddr     = "localhost:6379"
-	redisPassword = ""
-	redisDB       = 0
-	serverAddr    = ":8080"
+var (
+	rdb           *redis.Client
+	redisAddr     string
+	redisPassword string
+	redisDB       int
+	serverAddr    string
 )
+
+func init() {
+	redisAddr = os.Getenv("REDIS_MASTER_SERVICE_HOST") + ":" + os.Getenv("REDIS_MASTER_SERVICE_PORT")
+	redisPassword = os.Getenv("REDIS_PASSWORD")
+	redisDBStr := os.Getenv("REDIS_DB")
+	serverAddr = os.Getenv("SERVER_ADDR")
+
+	// Set default values if environment variables are not provided.
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+	if redisPassword == "" {
+		redisPassword = ""
+	}
+	if redisDBStr == "" {
+		redisDBStr = "0"
+	}
+	if serverAddr == "" {
+		serverAddr = ":3000"
+	}
+	// Parse the Redis DB string to an integer.
+	var err error
+	redisDB, err = strconv.Atoi(redisDBStr)
+	if err != nil {
+		log.Fatalf("Invalid REDIS_DB value: %v\n", redisDBStr)
+	}
+
+	// Initialize the Redis client.
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     redisAddr,
+		Password: redisPassword,
+		DB:       redisDB,
+	})
+}
 
 func main() {
 	rdb = redis.NewClient(&redis.Options{
@@ -33,8 +67,11 @@ func main() {
 		DB:       redisDB,
 	})
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
-		// You can choose to exit the application gracefully or take other recovery actions here.
+		log.Printf("Failed to connect to Redis: %v", err)
+		log.Printf("could not connect to redis at: %s", redisAddr)
+
+	} else {
+		log.Printf("Connected to Redis at %s (DB %d)\n", redisAddr, redisDB)
 	}
 
 	router := mux.NewRouter()
@@ -63,10 +100,6 @@ func main() {
 
 	gracefulShutdown(srv)
 }
-
-//func handleError(w http.ResponseWriter, err error) {
-//	HandleError(w, err, "unspecified context", http.StatusInternalServerError)
-//}
 
 func HandleError(w http.ResponseWriter, err error, context string, statusCode int) bool {
 	if err != nil {

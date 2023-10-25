@@ -13,9 +13,6 @@
 # limitations under the License.
 
 FROM golang:1.19.6-alpine
-#RUN go install github.com/urfave/negroni@latest \
-#           github.com/gorilla/mux@latest \
-#           github.com/redis/go-redis/v9@latest
 
 WORKDIR /app
 COPY go.mod go.sum main.go ./
@@ -23,14 +20,16 @@ RUN go mod download && go mod verify
 
 ADD ./main.go .
 #RUN go build -v -o main .
-RUN CGO_ENABLED=0 GOOS=linux go build -v -o main .
-
+#RUN CGO_ENABLED=0 GOOS=linux go build -v -o main .
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o main .
 FROM scratch
+#FROM golang:1.19.6-alpine
+
 WORKDIR /app
-COPY --from=0 /app/main .
-COPY ./public/index.html public/index.html
-COPY ./public/script.js public/script.js
-COPY ./public/style.css public/style.css
+COPY --chown=nonroot:nonroot --from=0 /app/main .
+COPY --chown=nonroot:nonroot ./public/index.html public/index.html
+COPY --chown=nonroot:nonroot ./public/script.js public/script.js
+COPY --chown=nonroot:nonroot ./public/style.css public/style.css
 
 USER 5000:5000
 
